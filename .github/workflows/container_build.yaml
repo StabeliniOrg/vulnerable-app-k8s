@@ -31,6 +31,13 @@ jobs:
       - name: Build the image
         run: docker build -t ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} code/
 
+      - name: Run Snyk to check Docker image for vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}
+
       - name: Push image to GitHub Container Registry
         id: push-image-ghcr
         env:
