@@ -1,0 +1,48 @@
+name: ExamplePipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMAGE_PREFIX:
+        description: 'Container Image Prefix'
+        required: true
+        default: 'vulnerable'
+
+jobs:
+  build-and-scan-container:
+    name: Build, scan and sandbox image
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # For SARIF
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Build the image
+        run: docker build -t ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} code/
+
+      - name: Push image to GitHub Container Registry
+        id: push-image-ghcr
+        env:
+          IMAGE_REGISTRY: "ghcr.io"
+          IMAGE_REPOSITORY: ${{ github.actor }}
+          IMAGE_NAME: "${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}"
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Lowercase repository
+          export IMAGE_REPOSITORY=${IMAGE_REPOSITORY,,}
+
+          # Point image to image registry and push
+          docker tag ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Pipeline summary
+        run: |
+          echo '### Job Summary' >> $GITHUB_STEP_SUMMARY
+          echo 'Build finished  ' >> $GITHUB_STEP_SUMMARY
+          echo '- Image Available in GitHub Packages: *${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}*' >> $GITHUB_STEP_SUMMARY
+          echo '- Execute Container Image Locally: `docker run -p 8080:8080 ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}`' >> $GITHUB_STEP_SUMMARY
+          echo '- Local reproducability can be achieved with: `docker build -t petclinic:test -f Dockerfile_staged`'
