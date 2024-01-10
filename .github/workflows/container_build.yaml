@@ -46,10 +46,8 @@ jobs:
           docker tag ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
 
-      - name: Pipeline summary
-        run: |
           echo '### Job Summary' >> $GITHUB_STEP_SUMMARY
           echo 'Build finished  ' >> $GITHUB_STEP_SUMMARY
           echo '- Image Available in GitHub Packages: *${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}*' >> $GITHUB_STEP_SUMMARY
-          echo '- Execute Container Image Locally: `docker run -p 8080:8080 ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}`' >> $GITHUB_STEP_SUMMARY
-          echo '- Local reproducability can be achieved with: `docker build -t petclinic:test -f Dockerfile_staged`'
+          echo '- Execute Container Image Locally: `docker run -p 8080:8080 $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG`' >> $GITHUB_STEP_SUMMARY
+          echo '- Local reproducability can be achieved with: `docker build -t imagename:test -f Dockerfile_staged`'
