@@ -39,6 +39,7 @@ jobs:
           image: ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}
 
       - name: Push image to GitHub Container Registry
+        if: always()  # Run independed of prior checks
         id: push-image-ghcr
         env:
           IMAGE_REGISTRY: "ghcr.io"
