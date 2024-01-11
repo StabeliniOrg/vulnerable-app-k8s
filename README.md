@@ -23,7 +23,7 @@ Afterwards a webshell is available below **/shell.jsp?cmd=CMD**  where CMD can b
 Further lateral movement is possible on from this point.
 
 ## Security Measures
-Depending on team responsibilities and company maturity level different security measures are possible like Container Image scanning,  
+Depending on team responsibilities and company maturity level different security measures are possible like Container Image scanning, 
 Container Registry Scanning, Admission Controller, Runtime Protection (e.g. RASP), Agentless Scanning (for Hyperscalers), SAST, DAST, SCA... and many more
 
 ### Container
