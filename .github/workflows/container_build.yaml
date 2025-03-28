@@ -16,7 +16,7 @@ jobs:
       actions: read
       contents: read
       packages: write
-      secrets: read  # Ensure you have permission to access secrets like Kubeconfig
+     
 
     steps:
       - name: Check out the repository
