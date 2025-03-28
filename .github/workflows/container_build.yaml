@@ -9,13 +9,14 @@ on:
         default: 'vulnerable'
 
 jobs:
-  build-container:
-    name: Container pipeline
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    name: Build and Deploy Container to Kubernetes
+    runs-on: self-hosted
     permissions:
       actions: read
       contents: read
       packages: write
+      secrets: read  # Ensure you have permission to access secrets like Kubeconfig
 
     steps:
       - name: Check out the repository
@@ -31,15 +32,16 @@ jobs:
       - name: Build the image
         run: docker build -t ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} code/
 
-      #- name: Run Snyk to check Docker image for vulnerabilities
-      #  uses: snyk/actions/docker@master
-      #  env:
-      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      #  with:
-      #    image: ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}
+      # Optional: Run Snyk to check Docker image for vulnerabilities
+      # - name: Run Snyk to check Docker image for vulnerabilities
+      #   uses: snyk/actions/docker@master
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      #   with:
+      #     image: ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}
 
       - name: Push image to GitHub Container Registry
-        if: always()  # Run independed of prior checks
+        if: always()  # Run independently of prior checks
         id: push-image-ghcr
         env:
           IMAGE_REGISTRY: "ghcr.io"
@@ -50,7 +52,7 @@ jobs:
           # Lowercase repository
           export IMAGE_REPOSITORY=${IMAGE_REPOSITORY,,}
 
-          # Point image to image registry and push
+          # Tag the image and push to GitHub Container Registry
           docker tag ${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }} $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
 
@@ -58,4 +60,19 @@ jobs:
           echo 'Build finished  ' >> $GITHUB_STEP_SUMMARY
           echo '- Image Available in GitHub Packages: *${{ github.event.inputs.IMAGE_PREFIX }}-${{ github.repository_id }}:${{ github.sha }}*' >> $GITHUB_STEP_SUMMARY
           echo '- Execute Container Image Locally: `docker run -p 8080:8080 $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG`' >> $GITHUB_STEP_SUMMARY
-          echo '- Local reproducability can be achieved with: `docker build -t imagename:test -f Dockerfile_staged`'
+          echo '- Local reproducibility can be achieved with: `docker build -t imagename:test -f Dockerfile_staged`' >> $GITHUB_STEP_SUMMARY
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          kubectl-version: 'latest'
+
+      - name: Set kubeconfig from secret
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=kubeconfig.yaml
+          
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/my-app my-app=${{ github.actor }}/vulnerable-${{ github.repository_id }}:${{ github.sha }} -n default
+          kubectl rollout status deployment/my-app -n default
