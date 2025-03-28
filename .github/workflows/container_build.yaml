@@ -9,7 +9,7 @@ on:
         default: 'vulnerable'
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: self-hosted  # Corrigido a indentação aqui
     name: "Build and Deploy Container to Kubernetes"
     permissions:
