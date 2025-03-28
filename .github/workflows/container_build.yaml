@@ -10,13 +10,12 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build and Deploy Container to Kubernetes
-    runs-on: self-hosted
+    runs-on: self-hosted  # Corrigido a indentação aqui
+    name: "Build and Deploy Container to Kubernetes"
     permissions:
       actions: read
       contents: read
       packages: write
-     
 
     steps:
       - name: Check out the repository
