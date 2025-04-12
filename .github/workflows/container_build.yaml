@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Corrigido a indentação aqui
+    runs-on: [self-hosted]  
     name: "Build and Deploy Container to Kubernetes"
     permissions:
       actions: read
