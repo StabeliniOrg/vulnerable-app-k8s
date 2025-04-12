@@ -1,12 +1,5 @@
 name: ExamplePipeline
 
-on:
-  workflow_dispatch:
-    inputs:
-      IMAGE_PREFIX:
-        description: 'Container Image Prefix'
-        required: true
-        default: 'vulnerable'
 
 jobs:
   deploy:
