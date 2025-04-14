@@ -1,4 +1,4 @@
-name: ExamplePipeline
+name: VulnAppk8s
 
 on:
   workflow_dispatch:
